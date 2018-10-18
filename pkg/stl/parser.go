@@ -30,6 +30,17 @@ func NewParser(path string) (p *Parser, err error) {
 	return
 }
 
+// A STL file starts with solid: <name>
+
+//facet normal ni nj nk
+//    outer loop
+//        vertex v1x v1y v1z
+//        vertex v2x v2y v2z
+//        vertex v3x v3y v3z
+//    endloop
+//endfacet
+
+// It will end with: endsolid <name>
 func (p *Parser) Parse() {
 
 }
