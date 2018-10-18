@@ -1,8 +1,15 @@
 package main
 
-import "glitter.jemoeders.website/biodiscus/glitch/pkg"
+import (
+	"glitter.jemoeders.website/biodiscus/glitch/pkg/stl"
+	"log"
+)
 
 func main() {
-	t := pkg.Test{}
-	t.Hello()
+	p, err := stl.NewParser("data/cup/100_ml.stl")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	p.Parse()
 }
