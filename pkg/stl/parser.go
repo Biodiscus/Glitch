@@ -47,44 +47,115 @@ func NewParser(path string) (p *Parser, err error) {
 //endfacet
 
 // It will end with: endsolid <name>
-func (p *Parser) Parse() {
+func (p *Parser) Parse() data.BeginSolid {
+	var solid data.BeginSolid
+	var err error
+
 	lines := strings.Split(p.content, NewLine)
+
+	facets := make([]data.Facet, 0)
 
 	// For now assume that the files are valid and can only contain 1 solid
 	for index, line := range lines {
 		if data.FacetRegex.MatchString(line) {
-			p.parseFacet(index, lines)
+			//index := p.parseFacet(index, lines)
+			facet, err := p.parseFacet(index, lines)
+			if err != nil {
+				log.Fatal("Error parsing STL file: ", err)
+			}
+
+			facets = append(facets, facet)
+		} else if data.SolidRegex.MatchString(line) {
+			solid.Name, err = p.parseName(line)
+			if err != nil {
+				log.Fatal("Error parsing solid: ", err)
+			}
+		} else if data.EndSolidRegex.MatchString(line) {
+			solid.EndFile.Name, err = p.parseName(line)
+			if err != nil {
+				log.Fatal("Error parsing end solid: ", err)
+			}
+
+			// Break for now
+			break;
 		}
 	}
+
+	solid.Facets = facets
+
+	return solid
 }
 
-func (p *Parser) parseFacet(index int, lines []string) (int, error) {
-	newIndex := index + 4
-
-	// After a facet decleration, there should be a outer loop
-	outer := lines[index+1]
-	if !data.OuterLoopRegex.MatchString(outer) {
-		return -1, errors.New("expected a `outer loop` after a `facet`, found: "+outer)
+func (p *Parser) parseName(line string) (string, error) {
+	arr := strings.Split(line, " ")
+	if len(arr) != 2 {
+		return "", errors.New("expected the second argument to be a name, got: "+line)
 	}
 
-	vertexes := make([]data.Vertex, 0)
+	return arr[1], nil
+}
+
+func (p *Parser) parseFacet(index int, lines []string) (data.Facet, error) {
+	var err error
+
+	facet := data.Facet{}
+
+	// After a facet declaration, there should be a outer loop
+	outer := lines[index+1]
+	if !data.OuterLoopRegex.MatchString(outer) {
+		return facet, errors.New("expected a `outer loop` after a `facet`, found: "+outer)
+	}
+
+	vertices := make([]data.Vertex, 0)
 	// After the outer come the vertices
-	for i, line := range lines[index+2:] {
-		if data.EndLoopRegex.MatchString(line) {
-			newIndex = i
+	for _, line := range lines[index+2:] {
+		if data.EndFacetRegex.MatchString(line) {
 			break;
-		} else {
+		} else  if data.VertexRegex.MatchString(line){
 			vertex, err := p.parseVertex(line)
 			if err != nil {
 				log.Fatal(err)
 			}
-			vertexes = append(vertexes, vertex)
+			vertices = append(vertices, vertex)
 		}
 	}
 
+	declaration := lines[index]
+	facet, err = p.parseFacetDeclaration(declaration)
+	facet.Vertices = vertices
 
-	log.Println(vertexes)
-	return newIndex, nil
+	if err != nil {
+		return facet, errors.New("expected a I J K value in the facet declaration, got: "+declaration)
+	}
+
+
+	return facet, nil
+}
+
+func (p *Parser) parseFacetDeclaration(declaration string) (data.Facet, error){
+	floats := data.FloatRegex.FindAllString(declaration, -1)
+
+	var err error
+
+	facet := data.Facet{}
+
+	facet.I, err = p.parseFloat(floats[0])
+	if err != nil {
+		return facet, errors.New("error parsing I of facet")
+	}
+
+	facet.J, err = p.parseFloat(floats[1])
+	if err != nil {
+		return facet, errors.New("error parsing J of facet")
+	}
+
+	facet.K, err = p.parseFloat(floats[2])
+	if err != nil {
+		return facet, errors.New("error parsing K of facet")
+	}
+
+
+	return facet, nil
 }
 
 func (p *Parser) parseVertex(line string) (data.Vertex, error) {

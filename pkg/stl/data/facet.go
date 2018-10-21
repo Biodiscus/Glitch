@@ -1,5 +1,7 @@
 package data
 
+import "fmt"
+
 // facet normal ni nj nk
 // 		outer loop
 //			...
@@ -10,5 +12,9 @@ type Facet struct {
 	J float32
 	K float32
 
-	vertices []Vertex
+	Vertices []Vertex
+}
+
+func (f Facet) String() string {
+	return fmt.Sprint("Facet { I: ", f.I, ", J: ", f.J, ", K: ", f.K, ", Vertices: ", f.Vertices,  "}")
 }

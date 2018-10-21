@@ -6,10 +6,11 @@ import (
 )
 
 func main() {
-	p, err := stl.NewParser("data/cup/100_ml.stl")
+	p, err := stl.NewParser("data/cup/10_ml.stl")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	p.Parse()
+	solid := p.Parse()
+	log.Println("Got Solid:", solid)
 }
