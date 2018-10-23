@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"log"
 	"runtime"
@@ -10,86 +10,98 @@ import (
 const Width = 500
 const Height = 500
 
+var (
+	texture   uint32
+	rotationX float32
+	rotationY float32
+)
+
 var Triangle = []float32{
-	0, 0.5, 0, // top
-	-0.5, -0.5, 0, // left
-	0.5, -0.5, 0, // right
+	4.68435 - 7.79994 - 8.98095,
+	-4.74887 - 7.62968 - 8.8107,
+	4.59622 - 7.81663 - 8.99765,
+	4.74887 - 7.75432 - 8.93533,
+	-4.74887 - 7.62968 - 8.8107,
+	4.68435 - 7.79994 - 8.98095,
+}
+
+var previousTime float64
+var angle float64
+
+func init() {
+	runtime.LockOSThread()
 }
 
 func main() {
-	runtime.LockOSThread()
-
-	window := initGlfw()
-	defer window.Destroy()
-
-	program := initOpenGl()
-
-	vao := makeVao(Triangle)
-
-
-	for !window.ShouldClose() {
-		draw(vao, window, program)
-	}
-}
-
-func makeVao(points []float32) uint32 {
-	var vbo uint32
-	var vao uint32
-
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4 * len(points), gl.Ptr(points), gl.STATIC_DRAW)
-
-	gl.GenVertexArrays(	1, &vao)
-	gl.BindVertexArray(vao)
-	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
-
-	return vao
-}
-
-func draw(vao uint32, window *glfw.Window, program uint32) {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(program)
-
-	gl.BindVertexArray(vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(Triangle)))
-
-	glfw.PollEvents()
-	window.SwapBuffers()
-}
-
-func initOpenGl() uint32 {
-	if err := gl.Init(); err != nil {
-		log.Fatal("Error initializing OpenGl: ", err)
-	}
-
-	version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Println("OpenGL Version:", version)
-
-	program := gl.CreateProgram()
-	gl.LinkProgram(program)
-
-	return program
-}
-
-func initGlfw() *glfw.Window {
 	if err := glfw.Init(); err != nil {
-		log.Fatal("Error initializing window: ", err)
+		log.Fatalln("failed to initialize glfw:", err)
 	}
+	defer glfw.Terminate()
 
 	glfw.WindowHint(glfw.Resizable, glfw.False)
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-
-	window, err := glfw.CreateWindow(Width, Height, "Testing Window", nil, nil)
+	window, err := glfw.CreateWindow(800, 600, "Test", nil, nil)
 	if err != nil {
-		log.Fatal("Error creating window: ", err)
+		panic(err)
 	}
 	window.MakeContextCurrent()
 
-	return window
+	if err := gl.Init(); err != nil {
+		panic(err)
+	}
+
+	setupScene()
+
+	previousTime = glfw.GetTime()
+
+	for !window.ShouldClose() {
+		drawScene()
+		window.SwapBuffers()
+		glfw.PollEvents()
+	}
+}
+
+func setupScene() {
+	gl.Enable(gl.DEPTH_TEST)
+
+	gl.ClearColor(0, 0, 0, 0)
+
+	gl.MatrixMode(gl.PROJECTION)
+	gl.LoadIdentity()
+	gl.Frustum(-4.0, 4.0, -4.0, 4.0, 0.1, 10.0)
+
+
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.LoadIdentity()
+	gl.Translatef(0.0, 0.0, -0.11)
+
+}
+
+func drawScene() {
+	time := glfw.GetTime()
+	diff := time - previousTime
+	previousTime = time
+
+	angle += diff / 100
+
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.LoadIdentity()
+	gl.Translatef(0.0, 0.0, -0.11)
+	//gl.Translated(0, 0, -0.11 - angle)
+	gl.Rotated(angle * 100, 0.0, 1.0, 0.0)
+
+	gl.PointSize(3.0)
+	gl.Begin(gl.POINTS)
+	for x := float32(-4.0); x <= 4.0; x += 0.5 {
+		for y := float32(-4.0); y <= 4.0; y += 0.5 {
+			for z := float32(0); z <= 2.0; z += 0.1 {
+				gl.Color3f(1, 0, 0)
+				gl.Vertex3f(x, y, z)
+			}
+		}
+	}
+	gl.End()
 }
