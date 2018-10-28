@@ -3,7 +3,7 @@ package window
 import (
 	"errors"
 	"fmt"
-	"github.com/go-gl/gl/all-core/gl"
+	"github.com/go-gl/gl/v3.3-compatibility/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -49,7 +49,7 @@ func (w *Window) setupGLFW() error {
 
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 
 	window, err := glfw.CreateWindow(w.width, w.height, w.title, nil, nil)
 	if err != nil {
@@ -84,6 +84,11 @@ func (w *Window) setupScene() error {
 
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
+
+	//projection := mgl32.Perspective(mgl32.DegToRad(45.0), float32(Width) / Height, 0.1, 10.0)
+	//projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
+	//gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
+
 	//gl.Frustum(-20.0, 20.0, -20.0, 20.0, 0.1, 10.0)
 	gl.Ortho(-40.0, 40.0, -40.0, 40.0, 1, 80.0)
 

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"glitter.jemoeders.website/biodiscus/glitch/pkg/mvc/controller"
-	"glitter.jemoeders.website/biodiscus/glitch/pkg/mvc/driver"
+	screen2 "glitter.jemoeders.website/biodiscus/glitch/pkg/screen"
 	"glitter.jemoeders.website/biodiscus/glitch/pkg/window"
 	"log"
 	"runtime"
@@ -15,7 +14,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var mvcDriver driver.MvcDriver
+var screen *screen2.Home
 
 func main() {
 	w, err := window.NewWindow(Width, Height, "Testing")
@@ -23,19 +22,17 @@ func main() {
 		log.Fatal("Error when creating a new window: ", err)
 	}
 
-	setupMVC()
+	screen = new(screen2.Home)
+	screen.Initialize()
 
 	w.SetRunStep(step)
 	w.Run()
 }
 
-func setupMVC() {
-	mvcDriver.SetController(controller.HomeController{})
-}
-
 func step(delta float64) {
+	screen.Update(delta)
 
-	mvcDriver.Update(delta)
-	mvcDriver.Render(delta)
-
+	//gl.PushMatrix()
+	screen.Render(delta)
+	//gl.PopMatrix()
 }
