@@ -3,7 +3,7 @@ package window
 import (
 	"errors"
 	"fmt"
-	"github.com/go-gl/gl/v3.3-compatibility/gl"
+	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -48,8 +48,8 @@ func (w *Window) setupGLFW() error {
 	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.False)
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.ContextVersionMajor, 2)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
 	window, err := glfw.CreateWindow(w.width, w.height, w.title, nil, nil)
 	if err != nil {
